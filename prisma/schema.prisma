@@ -20,6 +20,7 @@ model User {
   roleId        Int
   role          Role           @relation(fields: [roleId], references: [id]) 
   posts         Post[] 
+  postPhoto    String?
   comments      Comment[]   
   commentLikes  CommentLike[]  
   postLikes     PostLike[]    
