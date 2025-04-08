@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt,Strategy } from "passport-jwt";
-import { PrismaService } from "src/prisma/prisma.service";
+import { PrismaService } from "src/auth/prisma/prisma.service";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -10,20 +10,26 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: config.get<string>('JWT_SECRET', 'default_secret'),
+      
     });
+    console.log('JWT_SECRET:', config.get<string>('JWT_SECRET'));
+    
   }
-
-  async validate(payload: {sub: number, email: string}) {
+  
+  
+  async validate(payload: { sub: number, email: string }) {
     const user = await this.prisma.user.findUnique({
-      where: {
-        id: payload.sub
-      }
-    })
+      where: { id: payload.sub },
+    });
 
-    return user
-    // return {
-      // userId: payload.sub,
-      // email: payload.email
-    // }
+    if (!user) {
+      console.warn(`User with ID ${payload.sub} not found`);
+      throw new BadRequestException('User not found in database');
+    }
+    
+    return {
+      id: user.id,
+      email: user.email,
+    };
   }
 }

@@ -11,11 +11,14 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-export default async function sendEmail(to: string,subject: string, text: string) {
+export default async function sendEmail(to: string,subject: string, text: string,type: string) {
   const mailOptions = {
     to,
     subject,
-    text
+    text,
+    headers: {
+      'Content-Type': type,
+    }
   };
 
   try {

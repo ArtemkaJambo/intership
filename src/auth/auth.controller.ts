@@ -10,7 +10,7 @@ export class AuthController{
     
     constructor(private authService: AuthService) {
         // this.authService.test()
-    }
+    } 
 
     @Post('sign-up')
     signup(
@@ -24,8 +24,8 @@ export class AuthController{
     }
 
         @Get('verify-email')
-    async verifyEmail(@Query() query: { token: string, userId: number,}) {
-        return this.authService.verifyEmail(query.token,query.userId);
+    async verifyEmail(@Query('token') token: string, @Query('userId') userId: number) {
+        return this.authService.verifyEmail(token, userId);
     }
     
    @Post('reset-password-request')
@@ -35,21 +35,18 @@ export class AuthController{
 
   
     @Get('reset-password')
-    async verifyResetToken(@Query() query: { token: string, userId: string }) { 
-        const userId = Number(query.userId); 
-        if (!query.token) {
-            throw new BadRequestException('Token is required');
-        }
-        return this.authService.verifyResetToken(query.token, userId);
+    async verifyResetToken(@Query('token') token: string ,@Query('userId', ParseIntPipe) userId: number) { 
+        return this.authService.verifyResetToken(token, userId);
         }
 
-        @Put('reset-password')
-    async resetPassword(@Query() query: { token: string, userId: string }, @Body() dto: AuthDto) {
-        const userId = Number(query.userId);
-        if (!query.token) {
+    
+    @Put('reset-password')
+    async resetPassword(@Query('token') token: string, @Query('userId', ParseIntPipe) userId: number, @Body() dto: AuthDto) {
+        if (!token) {
             throw new BadRequestException('token is required');
         }
-        return this.authService.resetPassword(query.token, userId, dto);
+
+        return this.authService.resetPassword(token, userId, dto);
     }
     
     @Post('refresh')

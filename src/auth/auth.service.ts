@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException } from "@nestjs/common";
-import { PrismaService } from "src/prisma/prisma.service";
+import { PrismaService } from "src/auth/prisma/prisma.service";
 import { AuthDto } from "./dto";
 import * as bcrypt from 'bcrypt'
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
@@ -10,6 +10,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { redis } from "./redis/redis";
 import { signInDto } from "./dto/signin.dto";
 import { resetPasswordDto } from "./dto/resetPassword.dto";
+import {join} from 'path'
+import * as fs from 'fs'
+import * as path from 'path'
 
 @Injectable()
 export class AuthService {
@@ -25,7 +28,8 @@ export class AuthService {
         const hash = await bcrypt.hash(dto.password, 10)
 
         if (dto.password !== dto.confirmPassword) {
-            return 'passwords are different'
+            throw new BadRequestException('passwords are different')
+
         }
 
         const user = await this.prisma.user.create({
@@ -37,6 +41,7 @@ export class AuthService {
             }, 
             select: {
                 id: true,
+                name: true,
                 email: true,
             }
         })
@@ -44,12 +49,15 @@ export class AuthService {
         const tokenVerify = uuidv4()
         await redis.setex(`verify:${user.id}`, 3600, tokenVerify)
 
-    await sendEmail(
-         user.email,
-        'Вітання!',
-        `Натисніть на посилання для підтвердження вашої електронної пошти: 
-        http://localhost:3000/auth/verify-email?token=${tokenVerify}&userId=${user.id}`)
+        const pathToHtml = path.join('src/auth/verifyForm.html')
+        const readHtmlFile = fs.readFileSync(pathToHtml, 'utf8')
+        const host = process.env.host
+        const link = `${host}/auth/verify-email?token=${tokenVerify}&userId=${user.id}`
+        const finalLink = readHtmlFile.replace('{name}', user.name).replace('{verify}', link)
+        
+        const contentHeader = 'text/html; charset=utf-8'
 
+    await sendEmail(user.email,'Welcome!',finalLink, contentHeader)
         return user
        } catch (error) {
         console.log(error);
@@ -97,9 +105,9 @@ export class AuthService {
         if (getRedisToken) {
             throw new ForbiddenException('Please confirm your email');
         }
-    
+     
         const payload = {
-            id: userId,
+            sub: userId,
             email
         }
 
@@ -110,6 +118,7 @@ export class AuthService {
             expiresIn: '30m',
             secret: accessSecret
         });
+        
         const refreshToken = await this.jwt.signAsync(payload, {
             expiresIn: '14d',
             secret: refreshSecret
@@ -117,7 +126,6 @@ export class AuthService {
 
         await redis.setex(`refreshToken:${userId}`, 100000, refreshToken)
     
-
         return {
             message: 'You signed in successfully',
             access_token: accessToken,
@@ -127,11 +135,13 @@ export class AuthService {
 
       async refreshAccessToken(refreshToken: string) {
         try {
+
             const payload = await this.jwt.verify(refreshToken, {
                 secret: this.config.get('JWT_REFRESH_SECRET')
             })
 
-            const getToken = await redis.get(`refreshToken:${payload.id}`)
+            console.log('Decoded refresh payload:', payload);
+            const getToken = await redis.get(`refreshToken:${payload.sub}`)
             
 
             const newAccessToken = await this.jwt.signAsync(
@@ -144,7 +154,7 @@ export class AuthService {
                 { expiresIn: '14d', secret: this.config.get('JWT_REFRESH_SECRET') }
             );
 
-            await redis.setex(`refreshToken:${payload.id}`, 14 * 24 * 60 * 60, newRefreshToken);
+            await redis.setex(`refreshToken:${payload.sub}`, 14 * 24 * 60 * 60, newRefreshToken);
             
             return { access_token: newAccessToken };
 
@@ -160,7 +170,12 @@ export class AuthService {
             const user = await this.prisma.user.findUnique({
                 where: {
                     email
-                }                
+                },
+                select: {
+                    id: true,
+                    email: true, 
+                    name: true
+                }        
             })
             if (!user) {
                 throw new BadRequestException('user is not found')
@@ -169,8 +184,16 @@ export class AuthService {
             const redisToken = uuidv4()
             
             await redis.setex(`resetPassword:${user.id}`, 3600, redisToken)
-            await sendEmail(user.email, 'Вітання',
-                 `http://localhost:3000/auth/reset-password?token=${redisToken}&userId=${user.id}`)
+
+            const pathForm = path.join('src/auth/reset.html')
+            const formOfRequest = fs.readFileSync(pathForm, 'utf-8')        
+            const host = process.env.host
+
+            const requestLink = `${host}/auth/reset-password?token=${redisToken}&userId=${user.id}`;
+            const changeLinks = formOfRequest.replace('{reset}', requestLink).replace('{name}', user.name,)
+
+            const headers = 'text/html; charset=utf-8'
+            await sendEmail(user.email, 'Welcome!', changeLinks, headers);
         
                     
             return user
@@ -185,32 +208,24 @@ export class AuthService {
                 throw new BadRequestException('Token is required');
             }
     
-            const parsedId = Number(userId);
-            if (isNaN(parsedId)) {
-                throw new BadRequestException('Invalid user ID');
-            }
-    
-            console.log("Parsed userId:", parsedId);
-    
             const user = await this.prisma.user.findUnique({
-                where: { id: parsedId }
-            });
+                where: { id: userId }
+            }); 
     
             if (!user) {
-                throw new BadRequestException('User not found');
+                // throw new BadRequestException('User not found');
+                return {message: 'user is not found or token is invalid'}
             }
     
-            const getRedisToken = await redis.get(`resetPassword:${parsedId}`);
+            const getRedisToken = await redis.get(`resetPassword:${userId}`);
     
-            console.log("VERIFY TOKEN:", getRedisToken);
-            console.log("VERIFY ID:", parsedId);
-    
+            
             if (!getRedisToken || getRedisToken !== token) {
                 // throw new ForbiddenException('confirm reset password in email');
                 return {message: 'confirm reset password in email'}
             }
     
-            return { token, userId: parsedId };
+            return { token, userId };
         } catch (error) {
             console.error('Error in verifyResetToken:', error);
             throw error;
@@ -221,14 +236,15 @@ export class AuthService {
 
     async resetPassword(token: string, userId: number, dto: AuthDto): Promise<{message: string} | unknown> {
         try {
-            const verifiedData = await this.verifyResetToken(token, userId);
-            console.log("Verified data:", verifiedData);
+          await this.verifyResetToken(token, userId);
             
             const getRedisToken = await redis.get(`resetPassword:${userId}`);
+            console.log(getRedisToken);
             
-                if (!getRedisToken) {
-                // throw  new BadRequestException('Confirm your request reset password');
-                return {message: 'Confirm your request reset password'}
+
+                if (!getRedisToken || getRedisToken !== token) {
+                    // throw  new BadRequestException('Confirm your request reset password');
+                    return {message: 'Confirm your request reset password'}
             } 
     
             const hash = await bcrypt.hash(dto.password, 10);
@@ -240,6 +256,9 @@ export class AuthService {
                 },
                 data: {
                     password: hash
+                }, select: {
+                    email: true,
+                    name: true
                 }
             });
             await redis.del(`resetPassword:${userId}`);

@@ -10,7 +10,6 @@ import { RefreshTokenStrategy } from "./strategy/refresh-jwt.strategy";
     imports: [JwtModule.register({
     })],
     controllers: [AuthController],
-    // providers: [AuthService, JwtStrategy]
     providers: [AuthService, RefreshTokenStrategy, JwtStrategy]
 })
 export class AuthModule {
