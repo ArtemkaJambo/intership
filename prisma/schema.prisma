@@ -25,7 +25,6 @@ model User {
   posts        Post[]
   postLikes    PostLike[]
   role         Role          @relation(fields: [roleId], references: [id])
-  
 }
 
 model Post {
