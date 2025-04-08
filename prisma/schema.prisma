@@ -4,65 +4,66 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DIRECT_URL")
+  url = env("DATABASE_URL")
+  directUrl     = env("DIRECT_URL")
 }
+
 model Role {
-  id    Int    @id @default(autoincrement())
-  name  String
-  users User[] 
+  id    Int    @id
+  name  String @unique
+  users User[]
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  name          String         @db.VarChar(50)
-  password      String         @db.VarChar(100)
-  email         String         @unique
-  roleId        Int
-  role          Role           @relation(fields: [roleId], references: [id]) 
-  posts         Post[] 
-  postPhoto    String?
-  comments      Comment[]   
-  commentLikes  CommentLike[]  
-  postLikes     PostLike[]    
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  name         String        @db.VarChar(50)
+  roleId       Int
+  password     String        @db.VarChar(100)
+  comments     Comment[]
+  commentLikes CommentLike[]
+  posts        Post[]
+  postLikes    PostLike[]
+  role         Role          @relation(fields: [roleId], references: [id])
 }
 
 model Post {
-  id          Int       @id @default(autoincrement())
-  title       String
-  content     String
-  createdAt   DateTime  @default(now()) 
-  updatedAt   DateTime  @updatedAt  
-  authorId    Int
-  author      User      @relation(fields: [authorId], references: [id]) 
-  postPhoto  String? 
-  comments    Comment[] 
-  postLikes   PostLike[]  
+  id        Int        @id @default(autoincrement())
+  title     String
+  content   String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  authorId  Int
+  postPhoto String?
+  comments  Comment[]
+  author    User       @relation(fields: [authorId], references: [id])
+  postLikes PostLike[]
 }
 
 model Comment {
-  id          Int       @id @default(autoincrement())
-  content     String
-  createdAt   DateTime  @default(now()) 
-  updatedAt   DateTime  @updatedAt 
-  authorId    Int
-  postId      Int
-  author      User      @relation(fields: [authorId], references: [id]) 
-  post        Post      @relation(fields: [postId], references: [id])
-  commentLikes CommentLike[] 
+  id           Int           @id @default(autoincrement())
+  content      String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  authorId     Int
+  postId       Int
+  author       User          @relation(fields: [authorId], references: [id])
+  post         Post          @relation(fields: [postId], references: [id])
+  commentLikes CommentLike[]
 }
 
 model CommentLike {
-  id        Int       @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   commentId Int
   userId    Int
-  comment   Comment   @relation(fields: [commentId], references: [id]) 
-  user      User      @relation(fields: [userId], references: [id]) 
+  comment   Comment @relation(fields: [commentId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
 }
 
 model PostLike {
-  id        Int       @id @default(autoincrement())
-  postId    Int
-  userId    Int
-  post      Post      @relation(fields: [postId], references: [id]) 
-  user      User      @relation(fields: [userId], references: [id]) 
+  id     Int  @id @default(autoincrement())
+  postId Int
+  userId Int
+  post   Post @relation(fields: [postId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
 }
