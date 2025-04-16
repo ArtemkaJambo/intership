@@ -9,9 +9,11 @@ import { JwtGuard } from "src/auth/guard/jwt.guard";
 import { Request as ExpressRequest } from 'express';
 import { GetUser } from "src/auth/decorator/get-user.decorator";
 import { User } from "@prisma/client";
+import { RolesGuard } from "src/auth/rolesDecorator/roles.guard";
+import { Roles } from "src/auth/rolesDecorator/roles.decorator";
 export * from 'src/auth/decorator/get-user.decorator'
 
-@UseGuards(JwtGuard)
+@UseGuards(JwtGuard, RolesGuard)
 @Controller('users')
 export class UserController {
     
@@ -29,16 +31,9 @@ export class UserController {
         return this.userService.getUserById(id)
     }
 
+    @Roles(1)
     @Post('')
-    async createUser(@Body() dto: UserDto, @GetUser() user: any) {
-       if (!user) {
-        throw new BadRequestException('user doesnt authorization')
-       }
-
-       if (user.role === 2) {
-        throw new BadRequestException('create user with role "User" doesnt available ')
-       }
-
+    async createUser(@Body() dto: UserDto) {
        return this.userService.createUser(dto)
     }
 
