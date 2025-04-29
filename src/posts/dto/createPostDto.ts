@@ -13,4 +13,7 @@ export class createPostDto {
     // @IsBoolean()
     @IsNotEmpty()
     archived: boolean
+
+    @IsNotEmpty()
+    category: number
 }
