@@ -141,9 +141,7 @@ export class PostsService {
       }
     }
    
-
-
-
+  
     async updatePost(id: number, dto: updatePostDto, user: any) {
       try {
         const update = await this.prisma.post.update({
