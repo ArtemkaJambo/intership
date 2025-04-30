@@ -126,10 +126,10 @@ export class PostsService {
             throw new BadRequestException('only admin and owner post is able to delete post')
           }
      
-          await this.prisma.comment.deleteMany({ where: { postId: id } });
-          
-
-          await this.prisma.post.delete({ where: { id } });
+          await this.prisma.$transaction([
+            this.prisma.comment.deleteMany({ where: { postId: id } }),
+            this.prisma.post.delete({ where: { id } })
+        ])
 
 
           return {message: 'Post successfully deleted'}
