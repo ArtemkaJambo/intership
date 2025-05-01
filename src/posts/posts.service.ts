@@ -123,7 +123,7 @@ export class PostsService {
         return updatedPost;
       } catch (error) {
         throw new NotFoundException({
-          status: HttpStatus.NOT_FOUND,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: 'post not found'
         }) 
       }
