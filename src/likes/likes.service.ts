@@ -6,7 +6,7 @@ export class LikesService {
 
     constructor(private prisma: PrismaService) {
 
-    }
+    }  
 
     async createLike(ref: string, id: number, userId: number, user: any) {
         try {
@@ -17,13 +17,13 @@ export class LikesService {
                     postId: id
                     }})
             : await this.prisma.commentLike.findFirst({ 
-                where:{ 
-                        userId,
-                        commentId: id 
+                where: { 
+                    userId,
+                    commentId: id 
                 }});
     
         if (postOrComment) {
-          throw new BadRequestException('You have already liked this ');
+          throw new BadRequestException('You have already liked this one');
         }
 
         const isOwner = user.id === userId
@@ -33,19 +33,23 @@ export class LikesService {
 
         if (ref === 'post') {
             return this.prisma.postLike.create({
-              data: { userId, postId: id }
-            });
+              data: {
+                  userId,
+                  postId: id
+                 }
+            })
         } else if (ref === 'comment') {
             return this.prisma.commentLike.create({
-              data: { userId, commentId: id }
-            });
+              data: {
+                 userId,
+                commentId: id }
+            })
         } else {
-            throw new BadRequestException('Incorrect ref');
+            throw new BadRequestException('Incorrect ref')
         }
-
        
         } catch (error) {
-            throw new BadRequestException('Error in set like. Maybe you arent owner')
+            throw new BadRequestException('Error in set like')
         }
     }
     
@@ -68,16 +72,13 @@ export class LikesService {
             } 
 
             if (!like) {
-                throw new BadRequestException('There is no like with such an id')
+                throw new BadRequestException(`Like not found`)
             }
             
-
             const isOwner = like.userId !== user.id
             if (isOwner) {
                 throw new BadRequestException(`You arent owner of this ${ref === 'post' ? 'post' : 'comment'}`)
             }
-            
-         
 
             if (ref === 'post') {
                 await this.prisma.postLike.delete({
@@ -95,8 +96,7 @@ export class LikesService {
 
             return {message: `Like deleted successfully`}
         } catch (error) {
-            console.log(error);
-            
+            throw new BadRequestException('Error in delete like')            
         }
 
     }
