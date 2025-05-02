@@ -17,6 +17,11 @@ export class CommentsService {
                     postId: id
                 }
             })
+
+            if (!comment) {
+                throw new BadRequestException('comment not found')
+            }
+
             return comment
         } catch (error) {
             throw new BadRequestException('error in get all comments')
@@ -27,13 +32,13 @@ export class CommentsService {
         try {
             const comment = await this.prisma.comment.findUnique({
                 where: {
-                    id, 
-                    postId
+                    postId,
+                    id
                 }
             })
             
             if (!comment) {
-                throw new BadRequestException('There is no such a comment')
+                throw new BadRequestException('Comment not found')
             }
 
             return comment
@@ -54,13 +59,9 @@ export class CommentsService {
                 }
             })
 
-            if (!comment) {
-                throw new Error('There is no such an id')
-            }
-            
             return comment
         } catch (error) {
-            throw new BadRequestException(error)                    
+            throw new BadRequestException('Error in creating cooment')                    
         }
     }
 
@@ -76,7 +77,7 @@ export class CommentsService {
             })
 
             if (!comment) {
-                throw new BadRequestException('Коментар не знайдено');
+                throw new BadRequestException('comment not found')
               }
 
             const isOwner = comment.authorId === user.id
@@ -98,7 +99,7 @@ export class CommentsService {
             })
 
             if (!deleteComment) {
-                throw new BadRequestException('There is no user with such an id')
+                throw new BadRequestException('Post not found')
             }
           
             return deleteComment
