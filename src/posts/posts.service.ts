@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/auth/prisma/prisma.service';
 import { createPostDto } from './dto/createPostDto';
 import { updatePostDto } from './dto/updatePostDto';
@@ -37,20 +37,27 @@ export class PostsService {
             const isAdmin = user.roleId === 1
             
             if (post?.archived && !isOwner && !isAdmin) {
-                throw new BadRequestException('isnt available');
-              }
+              throw new NotFoundException('post іsnt available')
+            }
+
+            if (!post) {
+              throw new NotFoundException('post not found')
+            }
+
             return post
         } catch (error) {
-            throw new BadRequestException('Post with such an id wasnt found')
-            
+          throw new InternalServerErrorException({
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Error in server'
+          })
         }
     }
 
 
     async getUserPosts(userId: number,archived: boolean, user: any, ) {
       try {
-        const isOwner = user.id === userId;
-        const isAdmin = user.roleId === 1;
+        const isOwner = user.id === userId
+        const isAdmin = user.roleId === 1
     
         if (archived && !isAdmin) {
           throw new BadRequestException('This function is available only for admin')
@@ -61,14 +68,17 @@ export class PostsService {
             authorId: userId,
             archived: archived !== undefined 
             ? isOwner || isAdmin ? archived : false
-            : isOwner || isAdmin ? undefined : false,
-        }
-          }
-        );
-    
+            : isOwner || isAdmin ? undefined : false,}})
+
+            if (!posts) {
+              throw new NotFoundException('post not found')
+            }
         return posts;
       } catch (error) {
-        throw new BadRequestException('Cant get user. Maybe you cant available to archived posts?');
+        throw new InternalServerErrorException({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Error in server'
+        })
       }
     }
     
@@ -81,25 +91,26 @@ export class PostsService {
                 authorId: userId,
                 archived: dto.archived
               }  
-            })
+            })  
             return createPost
         } catch (error) {
           throw new BadRequestException('Error in creating post')
           
         }
     }
-
+   
+    
 
     async postStatus(id: number, status: string, user: any) {
       try {
         const post = await this.prisma.post.findUnique({ where: { id } });
     
         if (!post) {
-          throw new BadRequestException('post is not found');
+          throw new NotFoundException('post not found');
         }
     
         if (post.authorId !== user.id) {
-          throw new BadRequestException('only owner is able to change an active post');
+          throw new BadRequestException('post not found');
         }
     
         const updatedPost = await this.prisma.post.update({
@@ -109,7 +120,10 @@ export class PostsService {
     
         return updatedPost;
       } catch (error) {
-        throw new BadRequestException('error in change status. Maybe you arent owner this post?');
+        throw new NotFoundException({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'post not found'
+        }) 
       }
     }
     
@@ -125,29 +139,45 @@ export class PostsService {
           if (!isOwner && !isAdmin) {
             throw new BadRequestException('only admin and owner post is able to delete post')
           }
-     
-          await this.prisma.$transaction([
-            this.prisma.comment.deleteMany({ where: { postId: id } }),
-            this.prisma.post.delete({ where: { id } })
-        ])
 
+          if (!post) {
+            throw new BadRequestException('Post not found')
+          }
+     
+         
+
+          await this.prisma.$transaction([
+             this.prisma.comment.deleteMany({ where: { postId: id } }),
+             this.prisma.post.delete({ where: { id } })
+          ])
 
           return {message: 'Post successfully deleted'}
       } catch (error) {
-        console.log(error);
-        
         throw new BadRequestException('Error in delete post. Maybe you arent an owner this post?')
         
       }
     }
    
-  
+
+
+
     async updatePost(id: number, dto: updatePostDto, user: any) {
       try {
+        const ifExistPost = await this.prisma.post.findUnique({
+          where: {
+            id
+          }
+        })
+        
+        const isOwner = user.id === ifExistPost?.authorId
+        if (!isOwner) {
+          throw new ForbiddenException('')
+        }
+
         const update = await this.prisma.post.update({
           where: {
             id
-          },
+          },  
           data: {
             title: dto.title,
             content: dto.content
@@ -157,12 +187,7 @@ export class PostsService {
         if (!update) {
           throw new BadRequestException('Post wasnt found')
         }
-        
-        const isAdmin = user.id === update.authorId
-        if (!isAdmin) {
-          throw new BadRequestException('only owner is able to change post')
-        }
-
+    
         return update
       } catch (error) {
         throw new BadRequestException('Error in updatePost')
