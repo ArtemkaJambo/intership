@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/auth/prisma/prisma.service';
 
 @Injectable()
@@ -49,7 +49,12 @@ export class LikesService {
         }
        
         } catch (error) {
-            throw new BadRequestException('Error in set like')
+            throw new HttpException({
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                error: 'Error in server'
+            }, HttpStatus.INTERNAL_SERVER_ERROR, {
+                cause: error
+            })
         }
     }
     
@@ -96,7 +101,12 @@ export class LikesService {
 
             return {message: `Like deleted successfully`}
         } catch (error) {
-            throw new BadRequestException('Error in delete like')            
+            throw new HttpException({
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                error: 'Error in server'
+            }, HttpStatus.INTERNAL_SERVER_ERROR, {
+                cause: error
+            })
         }
 
     }
