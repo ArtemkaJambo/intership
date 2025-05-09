@@ -93,12 +93,9 @@ export class PostsService {
                 title: dto.title,
                 content: dto.content,
                 authorId: userId,
-                archived: dto.archived,
-                categories: {
-                  
-                }
+                archived: dto.archived
               }  
-            })
+            })  
             return createPost
         } catch (error) {
           throw new HttpException({
@@ -110,7 +107,8 @@ export class PostsService {
           
         }
     }
-
+   
+    
 
     async postStatus(id: number, status: string, user: any) {
       try {
