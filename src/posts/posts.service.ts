@@ -46,9 +46,11 @@ export class PostsService {
 
             return post
         } catch (error) {
-          throw new InternalServerErrorException({
+          throw new HttpException({
             status: HttpStatus.INTERNAL_SERVER_ERROR,
             error: 'Error in server'
+          }, HttpStatus.INTERNAL_SERVER_ERROR, {
+            cause: error
           })
         }
     }
@@ -75,9 +77,12 @@ export class PostsService {
             }
         return posts;
       } catch (error) {
-        throw new InternalServerErrorException({
+
+        throw new HttpException({
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: 'Error in server'
+        }, HttpStatus.INTERNAL_SERVER_ERROR, {
+          cause: error
         })
       }
     }
@@ -94,7 +99,12 @@ export class PostsService {
             })  
             return createPost
         } catch (error) {
-          throw new BadRequestException('Error in creating post')
+          throw new HttpException({
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: "Error in server"
+          }, HttpStatus.INTERNAL_SERVER_ERROR, {
+            cause: error
+          })
           
         }
     }
@@ -120,10 +130,12 @@ export class PostsService {
     
         return updatedPost;
       } catch (error) {
-        throw new NotFoundException({
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'post not found'
-        }) 
+      throw new HttpException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        error: 'Error in server'
+      }, HttpStatus.INTERNAL_SERVER_ERROR, {
+        cause: error
+      })
       }
     }
     
@@ -143,9 +155,6 @@ export class PostsService {
           if (!post) {
             throw new BadRequestException('Post not found')
           }
-     
-         
-
           await this.prisma.$transaction([
              this.prisma.comment.deleteMany({ where: { postId: id } }),
              this.prisma.post.delete({ where: { id } })
@@ -153,7 +162,12 @@ export class PostsService {
 
           return {message: 'Post successfully deleted'}
       } catch (error) {
-        throw new BadRequestException('Error in delete post. Maybe you arent an owner this post?')
+        throw new HttpException({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Error in server',
+        }, HttpStatus.INTERNAL_SERVER_ERROR, {
+          cause: error
+        })
         
       }
     }
@@ -190,7 +204,12 @@ export class PostsService {
     
         return update
       } catch (error) {
-        throw new BadRequestException('Error in updatePost')
+        throw new HttpException({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Error in server'
+        }, HttpStatus.INTERNAL_SERVER_ERROR, {
+          cause: error
+        })
       }
     }
 
