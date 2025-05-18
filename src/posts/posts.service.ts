@@ -77,6 +77,7 @@ export class PostsService {
             }
         return posts;
       } catch (error) {
+
         throw new HttpException({
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: 'Error in server'
@@ -154,7 +155,6 @@ export class PostsService {
           if (!post) {
             throw new BadRequestException('Post not found')
           }
-
           await this.prisma.$transaction([
              this.prisma.comment.deleteMany({ where: { postId: id } }),
              this.prisma.post.delete({ where: { id } })
