@@ -12,7 +12,7 @@ export class InterceptorsController {
   @Get('')
   getLog() {
     return this.prisma.userActions.findMany({
-      take: 10
+      take: 100
     })
   }
 }
