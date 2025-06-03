@@ -17,7 +17,7 @@ export class FollowerController {
     }
 
     @Delete(':id')  
-    unfollow(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    unfollow(@Param('id', ParseIntPipe) id: number, @Req()req) {
         const userId = req.user.id
         return this.followerService.unfollow(id, userId)
     }

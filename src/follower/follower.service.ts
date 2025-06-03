@@ -66,7 +66,7 @@ export class FollowerService {
       } catch (error) {
         throw new HttpException({
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'Error in server'
+          error: 'Error in server!'
         }, HttpStatus.INTERNAL_SERVER_ERROR, {
           cause: error
         })
