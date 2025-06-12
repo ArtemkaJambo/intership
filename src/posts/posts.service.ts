@@ -93,22 +93,17 @@ export class PostsService {
                 title: dto.title,
                 content: dto.content,
                 authorId: userId,
-                archived: dto.archived
+                archived: dto.archived,
+                postPhoto: dto.postPhoto
               }  
             })  
             return createPost
         } catch (error) {
-          throw new HttpException({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: error.message
-          }, HttpStatus.INTERNAL_SERVER_ERROR, {
-            cause: error
-          })
+          throw new BadRequestException('Error in creating post')
+          
         }
-
     }
-   
-    
+
 
         async postStatus(id: number, status: string, user: any) {
       try {
@@ -146,27 +141,22 @@ export class PostsService {
           const isOwner = user.id === post?.authorId
           const isAdmin = user.roleId === 1
 
+          
           if (!isOwner && !isAdmin) {
             throw new BadRequestException('only admin and owner post is able to delete post')
           }
+     
+          await this.prisma.comment.deleteMany({ where: { postId: id } });
+          
 
-          if (!post) {
-            throw new BadRequestException('Post not found')
-          }
+          await this.prisma.post.delete({ where: { id } });
 
-          await this.prisma.$transaction([
-             this.prisma.comment.deleteMany({ where: { postId: id } }),
-             this.prisma.post.delete({ where: { id } })
-          ])
 
           return {message: 'Post successfully deleted'}
       } catch (error) {
-        throw new HttpException({
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'Error in server',
-        }, HttpStatus.INTERNAL_SERVER_ERROR, {
-          cause: error
-        })
+        console.log(error);
+        
+        throw new BadRequestException('Error in delete post. Maybe you arent an owner this post?')
         
       }
     }
@@ -203,12 +193,7 @@ export class PostsService {
     
         return update
       } catch (error) {
-        throw new HttpException({
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'Error in server'
-        }, HttpStatus.INTERNAL_SERVER_ERROR, {
-          cause: error
-        })
+        throw new BadRequestException('Error in updatePost')
       }
     }
 

@@ -16,7 +16,5 @@ export class createPostDto {
 
     @IsOptional()
     @IsString()
-    postPhoto?: string | null
-
-  
+    postPhoto?: string | null  
 }
