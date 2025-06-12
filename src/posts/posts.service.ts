@@ -46,9 +46,7 @@ export class PostsService {
 
             return post
         } catch (error) {
-          console.log(error);
-          
-    }}
+
 
 
     async getUserPosts(userId: number,archived: boolean, user: any ) {
@@ -75,6 +73,9 @@ export class PostsService {
         throw new HttpException({
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: error.message
+        throw new HttpException({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Error in server'
         }, HttpStatus.INTERNAL_SERVER_ERROR, {
           cause: error
         })
@@ -102,6 +103,11 @@ export class PostsService {
           }, HttpStatus.INTERNAL_SERVER_ERROR, {
             cause: error
           })
+            error: "Error in server"
+          }, HttpStatus.INTERNAL_SERVER_ERROR, {
+            cause: error
+          })
+          
         }
     }
    
@@ -132,6 +138,12 @@ export class PostsService {
         }, HttpStatus.INTERNAL_SERVER_ERROR, {
           cause: error
         })
+      throw new HttpException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        error: 'Error in server'
+      }, HttpStatus.INTERNAL_SERVER_ERROR, {
+        cause: error
+      })
       }
     }
     
@@ -152,8 +164,6 @@ export class PostsService {
           if (!post) {
             throw new BadRequestException('Post not found')
           }
-     
-        
 
           await this.prisma.$transaction([
              this.prisma.comment.deleteMany({ where: { postId: id } }),
@@ -170,6 +180,7 @@ export class PostsService {
         throw new HttpException({
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: error.message
+          error: 'Error in server',
         }, HttpStatus.INTERNAL_SERVER_ERROR, {
           cause: error
         })
@@ -212,6 +223,7 @@ export class PostsService {
         throw new HttpException({
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: error.message
+          error: 'Error in server'
         }, HttpStatus.INTERNAL_SERVER_ERROR, {
           cause: error
         })
