@@ -4,13 +4,14 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
-  directUrl     = env("DIRECT_URL")
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Role {
-  id    Int    @id
+  id    Int    @id @default(autoincrement())
   name  String @unique
+  description String @default("")
   users User[]
 }
 
@@ -25,19 +26,26 @@ model User {
   posts        Post[]
   postLikes    PostLike[]
   role         Role          @relation(fields: [roleId], references: [id])
+  usersAction  userActions[]
+  followed     Followers[]    @relation("Followed")
+  follower     Followers[]    @relation("Follower")
+  
 }
 
 model Post {
-  id        Int        @id @default(autoincrement())
-  title     String
-  content   String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  authorId  Int
-  postPhoto String?
-  comments  Comment[]
-  author    User       @relation(fields: [authorId], references: [id])
-  postLikes PostLike[]
+  id          Int            @id @default(autoincrement())
+  title       String
+  content     String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  authorId    Int
+  archived    Boolean 
+  postPhoto   String?
+  deleteUrl   String?
+  comments    Comment[]
+  author      User            @relation(fields: [authorId], references: [id])
+  postLikes   PostLike[]
+  categories  PostCategory[] 
 }
 
 model Comment {
@@ -58,12 +66,63 @@ model CommentLike {
   userId    Int
   comment   Comment @relation(fields: [commentId], references: [id])
   user      User    @relation(fields: [userId], references: [id])
+    @@unique([commentId, userId]) 
 }
 
-model PostLike {
+model PostLike {  
   id     Int  @id @default(autoincrement())
   postId Int
   userId Int
   post   Post @relation(fields: [postId], references: [id])
   user   User @relation(fields: [userId], references: [id])
+   @@unique([postId, userId])
+}
+
+model Category {
+  id          Int            @id @default(autoincrement())
+  name        String         @unique
+  description String         @default("") 
+  posts       PostCategory[]
+}
+
+model PostCategory {
+  id         Int    @id @default(autoincrement())
+  postId     Int
+  categoryId Int
+  post       Post   @relation(fields: [postId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+}
+
+enum EntityTypes {
+  User
+  Post
+  Comment
+  PostLike
+  CommentLike
+  Viewed
+  Followed
+  NewFollower
+}
+
+model userActions {
+  id            Int    @id @default(autoincrement())
+  action        String 
+  userId        Int
+  user          User    @relation(fields: [userId], references: [id])
+  entityType    EntityTypes
+  entityId      Int?
+  entity        Json
+  timestamp DateTime @default(now())
+}
+
+model Followers {
+  id              Int     @id   @default(autoincrement())
+  followed        User    @relation("Followed",fields: [followedId], references: [id])
+  followedId      Int
+
+  follower        User    @relation("Follower",fields: [followerId], references: [id])
+  followerId      Int
+
+  @@unique([followedId, followerId])
 }

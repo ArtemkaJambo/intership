@@ -1,0 +1,29 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: my-nest-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app                
+      - /app/node_modules     
+    working_dir: /app           
+    command: npm run start:dev
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: my-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+volumes:
+  redisdata:
+  

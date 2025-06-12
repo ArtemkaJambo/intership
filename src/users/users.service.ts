@@ -32,7 +32,7 @@ export class UsersService {
 
             return user
         } catch (err) {
-
+            throw new BadRequestException('Error in creating user')
         }
     }
 
@@ -51,25 +51,29 @@ export class UsersService {
 
     
     async createRole() {
-        const adminRole = await this.prisma.role.upsert({
-            where: { name: 'Admin'},
-            update: {},
-            create: {
-                id: 1,
-                name: 'Admin',
-                // description: ''
-            },
-        });
-
-        const userRole = await this.prisma.role.upsert({
-            where: { name: 'User' },
-            update: {},
-            create: {
-                id: 2, 
-                name: 'User',
-                // description: ''
-            },
-        });
+        try {
+           await this.prisma.role.upsert({
+                where: { name: 'Admin'},
+                update: {},
+                create: {
+                    id: 1,
+                    name: 'Admin',
+                    // description: ''
+                },
+            });
+    
+           await this.prisma.role.upsert({
+                where: { name: 'User' },
+                update: {},
+                create: {
+                    id: 2, 
+                    name: 'User',
+                    // description: ''
+                },
+            });
+        } catch (error) {
+            throw new BadRequestException('error in createRole', error)
+        }
     }
 
 

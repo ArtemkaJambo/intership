@@ -8,7 +8,6 @@ import { AuthGuard } from "@nestjs/passport";
 import { JwtGuard } from "src/auth/guard/jwt.guard";
 import { Request as ExpressRequest } from 'express';
 import { GetUser } from "src/auth/decorator/get-user.decorator";
-import { User } from "@prisma/client";
 import { RolesGuard } from "src/auth/rolesDecorator/roles.guard";
 import { Roles } from "src/auth/rolesDecorator/roles.decorator";
 export * from 'src/auth/decorator/get-user.decorator'

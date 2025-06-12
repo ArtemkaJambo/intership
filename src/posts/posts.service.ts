@@ -48,7 +48,7 @@ export class PostsService {
         } catch (error) {
           throw new HttpException({
             status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Error in server'
+            error: error.message
           }, HttpStatus.INTERNAL_SERVER_ERROR, {
             cause: error
           })
@@ -79,7 +79,7 @@ export class PostsService {
       } catch (error) {
         throw new HttpException({
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'Error in server'
+          error: error.message
         }, HttpStatus.INTERNAL_SERVER_ERROR, {
           cause: error
         })
@@ -100,20 +100,20 @@ export class PostsService {
         } catch (error) {
           throw new HttpException({
             status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: "Error in server"
+            error: error.message
           }, HttpStatus.INTERNAL_SERVER_ERROR, {
             cause: error
           })
-          
         }
+
     }
    
     
 
-    async postStatus(id: number, status: string, user: any) {
+        async postStatus(id: number, status: string, user: any) {
       try {
         const post = await this.prisma.post.findUnique({ where: { id } });
-    
+
         if (!post) {
           throw new NotFoundException('post not found');
         }
@@ -125,16 +125,15 @@ export class PostsService {
         const updatedPost = await this.prisma.post.update({
           where: { id },
           data: { archived: !post.archived },
-        });
-    
+        })
         return updatedPost;
       } catch (error) {
-      throw new HttpException({
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        error: 'Error in server'
-      }, HttpStatus.INTERNAL_SERVER_ERROR, {
-        cause: error
-      })
+        throw new HttpException({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: error.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR, {
+          cause: error
+        })
       }
     }
     
@@ -213,4 +212,7 @@ export class PostsService {
       }
     }
 
-}
+    }
+   
+    
+  

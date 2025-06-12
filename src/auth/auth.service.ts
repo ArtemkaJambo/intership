@@ -31,7 +31,6 @@ export class AuthService {
             throw new BadRequestException('passwords are different')
 
         }
-
         const user = await this.prisma.user.create({
             data: {
                 email: dto.email,
@@ -46,17 +45,16 @@ export class AuthService {
             }
         })
 
-        const tokenVerify = uuidv4()
-        await redis.setex(`verify:${user.id}`, 3600, tokenVerify)
+        const tokenVerify = uuidv4()        
+       await redis.setex(`verify:${user.id}`, 3600, tokenVerify)
 
-        const pathToHtml = path.join('src/auth/verifyForm.html')
+       const pathToHtml = path.join('src/auth/verifyForm.html')
         const readHtmlFile = fs.readFileSync(pathToHtml, 'utf8')
         const host = process.env.host
         const link = `${host}/auth/verify-email?token=${tokenVerify}&userId=${user.id}`
         const finalLink = readHtmlFile.replace('{name}', user.name).replace('{verify}', link)
         
         const contentHeader = 'text/html; charset=utf-8'
-
     await sendEmail(user.email,'Welcome!',finalLink, contentHeader)
         return user
        } catch (error) {
@@ -96,6 +94,7 @@ export class AuthService {
         if (!undecoded) {
             throw new ForbiddenException('passwords dont match')
         }
+        
         return this.signToken(user.id, user.email)
     }
 
@@ -110,7 +109,7 @@ export class AuthService {
             sub: userId,
             email
         }
-
+        
         const accessSecret = this.config.get('JWT_SECRET');
         const refreshSecret = this.config.get('JWT_REFRESH_SECRET');
     
@@ -124,8 +123,10 @@ export class AuthService {
             secret: refreshSecret
         });
 
+        
         await redis.setex(`refreshToken:${userId}`, 100000, refreshToken)
-    
+        
+
         return {
             message: 'You signed in successfully',
             access_token: accessToken,
@@ -140,7 +141,6 @@ export class AuthService {
                 secret: this.config.get('JWT_REFRESH_SECRET')
             })
 
-            console.log('Decoded refresh payload:', payload);
             const getToken = await redis.get(`refreshToken:${payload.sub}`)
             
 
@@ -182,7 +182,6 @@ export class AuthService {
             }
 
             const redisToken = uuidv4()
-            
             await redis.setex(`resetPassword:${user.id}`, 3600, redisToken)
 
             const pathForm = path.join('src/auth/reset.html')
@@ -198,7 +197,7 @@ export class AuthService {
                     
             return user
         } catch (error) {
-            console.log('error in resetpassword', error);
+            throw new BadRequestException('error in resetpassword', error)
         }
     }
 
@@ -239,7 +238,6 @@ export class AuthService {
           await this.verifyResetToken(token, userId);
             
             const getRedisToken = await redis.get(`resetPassword:${userId}`);
-            console.log(getRedisToken);
             
 
                 if (!getRedisToken || getRedisToken !== token) {
@@ -268,7 +266,7 @@ export class AuthService {
                 message: "Your password changed successfully"
             };
         } catch (error) {
-            console.log('Error in resetPassword', error);
+            throw new BadRequestException('Error in resetPassword', error)
         }
     } 
 
