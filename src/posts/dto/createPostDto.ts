@@ -1,4 +1,3 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class createPostDto {
     
@@ -14,6 +13,3 @@ export class createPostDto {
     @IsNotEmpty()
     archived: boolean
 
-    @IsNotEmpty()
-    category: number
-}
