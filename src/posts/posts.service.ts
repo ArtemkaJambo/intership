@@ -13,7 +13,7 @@ export class PostsService {
     async getPosts(name: string) {
         try {
             const findPost = await this.prisma.post.findMany({
-                where: {
+                where: {  
                     title: {
                         contains: name,
                         mode: 'insensitive'
@@ -106,7 +106,7 @@ export class PostsService {
             cause: error
           })
         }
-        
+
     }
    
     
