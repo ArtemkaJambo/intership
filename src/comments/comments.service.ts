@@ -65,12 +65,7 @@ export class CommentsService {
 
             return comment
         } catch (error) {
-           throw new HttpException({
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-                error: 'Error in server'
-            }, HttpStatus.INTERNAL_SERVER_ERROR, {
-                cause: error
-            })                 
+            throw new BadRequestException(error)                    
         }
     }
 

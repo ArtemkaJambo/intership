@@ -46,17 +46,13 @@ export class PostsService {
 
             return post
         } catch (error) {
-          throw new HttpException({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: error.message
-          }, HttpStatus.INTERNAL_SERVER_ERROR, {
-            cause: error
-          })
+          console.log(error);
+          
         }
     }
 
 
-    async getUserPosts(userId: number,archived: boolean, user: any, ) {
+    async getUserPosts(userId: number,archived: boolean, user: any ) {
       try {
         const isOwner = user.id === userId
         const isAdmin = user.roleId === 1
@@ -77,15 +73,11 @@ export class PostsService {
             }
         return posts;
       } catch (error) {
-        throw new HttpException({
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message
-        }, HttpStatus.INTERNAL_SERVER_ERROR, {
-          cause: error
-        })
+       console.log(error);
       }
+      
     }
-    
+  
     async createPost(dto: createPostDto, userId: number) {
         try {
             const createPost = await this.prisma.post.create({
@@ -99,11 +91,16 @@ export class PostsService {
             })  
             return createPost
         } catch (error) {
-          throw new BadRequestException('Error in creating post')
-          
+          throw new HttpException({
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: "Error in server"
+          }, HttpStatus.INTERNAL_SERVER_ERROR, {
+            cause: error
+          })
         }
     }
-
+   
+    
 
         async postStatus(id: number, status: string, user: any) {
       try {
@@ -145,18 +142,28 @@ export class PostsService {
           if (!isOwner && !isAdmin) {
             throw new BadRequestException('only admin and owner post is able to delete post')
           }
-     
-          await this.prisma.comment.deleteMany({ where: { postId: id } });
-          
 
-          await this.prisma.post.delete({ where: { id } });
+          if (!post) {
+            throw new BadRequestException('Post not found')
+          }
+          await this.prisma.$transaction([
+             this.prisma.comment.deleteMany({ where: { postId: id } }),
+             this.prisma.post.delete({ where: { id } })
+          ])
 
+          await this.prisma.$transaction([
+             this.prisma.comment.deleteMany({ where: { postId: id } }),
+             this.prisma.postCategory.deleteMany({ where: { postId: id } }),
+             this.prisma.postLike.deleteMany({ where: { postId: id } }), 
+             this.prisma.post.delete({ where: { id } })
+             
+            ])
+            
+            
 
           return {message: 'Post successfully deleted'}
       } catch (error) {
         console.log(error);
-        
-        throw new BadRequestException('Error in delete post. Maybe you arent an owner this post?')
         
       }
     }
@@ -193,7 +200,12 @@ export class PostsService {
     
         return update
       } catch (error) {
-        throw new BadRequestException('Error in updatePost')
+        throw new HttpException({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Error in server'
+        }, HttpStatus.INTERNAL_SERVER_ERROR, {
+          cause: error
+        })
       }
     }
 
