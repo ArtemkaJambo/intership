@@ -46,18 +46,10 @@ export class PostsService {
 
             return post
         } catch (error) {
-          throw new HttpException({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: error.message
-            error: 'Error in server'
-          }, HttpStatus.INTERNAL_SERVER_ERROR, {
-            cause: error
-          })
-        }
-    }
 
 
-    async getUserPosts(userId: number,archived: boolean, user: any, ) {
+
+    async getUserPosts(userId: number,archived: boolean, user: any ) {
       try {
         const isOwner = user.id === userId
         const isAdmin = user.roleId === 1
@@ -88,8 +80,10 @@ export class PostsService {
           cause: error
         })
       }
+
+      
     }
-    
+  
     async createPost(dto: createPostDto, userId: number) {
         try {
             const createPost = await this.prisma.post.create({
