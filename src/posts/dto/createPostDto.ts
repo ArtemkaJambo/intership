@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator";
-=======
->>>>>>> 459c1c717a91fa9ed6921d0c1f6409fdb3396413
 
 export class createPostDto {
     
@@ -17,10 +14,7 @@ export class createPostDto {
     @IsNotEmpty()
     archived: boolean
 
-<<<<<<< HEAD
     @IsOptional()
     @IsString()
-    postPhoto?: string | null  
+    postPhoto?: string | null
 }
-=======
->>>>>>> 459c1c717a91fa9ed6921d0c1f6409fdb3396413
