@@ -1,4 +1,3 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class createPostDto {
     
@@ -14,9 +13,3 @@ export class createPostDto {
     @IsNotEmpty()
     archived: boolean
 
-    @IsOptional()
-    @IsString()
-    postPhoto?: string | null
-
-  
-}
