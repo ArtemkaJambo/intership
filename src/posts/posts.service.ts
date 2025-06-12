@@ -93,7 +93,8 @@ export class PostsService {
                 title: dto.title,
                 content: dto.content,
                 authorId: userId,
-                archived: dto.archived
+                archived: dto.archived,
+                postPhoto: dto.postPhoto
               }  
             })  
             return createPost
@@ -146,6 +147,7 @@ export class PostsService {
           const isOwner = user.id === post?.authorId
           const isAdmin = user.roleId === 1
 
+          
           if (!isOwner && !isAdmin) {
             throw new BadRequestException('only admin and owner post is able to delete post')
           }
@@ -154,12 +156,17 @@ export class PostsService {
             throw new BadRequestException('Post not found')
           }
      
-         
+        
 
           await this.prisma.$transaction([
              this.prisma.comment.deleteMany({ where: { postId: id } }),
+             this.prisma.postCategory.deleteMany({ where: { postId: id } }),
+             this.prisma.postLike.deleteMany({ where: { postId: id } }), 
              this.prisma.post.delete({ where: { id } })
-          ])
+             
+            ])
+            
+            
 
           return {message: 'Post successfully deleted'}
       } catch (error) {
